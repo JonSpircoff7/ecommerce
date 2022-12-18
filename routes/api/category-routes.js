@@ -61,6 +61,7 @@ router.delete("/:id", (req, res) => {
       id: req.params.id,
     },
   })
+
     .then((category) => res.json(category))
     .catch((error) => res.status(400).json({ error }));
 });
