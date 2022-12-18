@@ -1,22 +1,63 @@
-const router = require('express').Router();
-const { Product, Category, Tag, ProductTag } = require('../../models');
-
-// The `/api/products` endpoint
+const router = express.Router();
+const { Product, ProductTag } = require("../../models");
 
 // get all products
-router.get('/', (req, res) => {
+router.get("/", (req, res) => {
   // find all products
   // be sure to include its associated Category and Tag data
+  Product.findAll({
+    include: [
+      {
+        model: Category,
+        attributes: ["category_name"],
+      },
+      {
+        model: Tag,
+        attributes: ["tag_name"],
+      },
+    ],
+  })
+    .then((products) => res.status(200).json(products))
+    .catch((err) => {
+      console.error(err);
+      res.status(500).json({ message: "Internal server error" });
+    });
 });
 
 // get one product
-router.get('/:id', (req, res) => {
+router.get("/:id", (req, res) => {
   // find a single product by its `id`
   // be sure to include its associated Category and Tag data
+  Product.findOne({
+    where: {
+      id: req.params.id,
+    },
+    include: [
+      {
+        model: Category,
+        attributes: ["category_name"],
+      },
+      {
+        model: Tag,
+        attributes: ["tag_name"],
+      },
+    ],
+  })
+    .then((product) => {
+      if (product) {
+        res.status(200).json(product);
+      } else {
+        res.status(404).json({ message: "Product not found" });
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).json({ message: "Internal server error" });
+    });
 });
 
 // create new product
-router.post('/', (req, res) => {
+router.post("/", (req, res) => {
   /* req.body should look like this...
     {
       product_name: "Basketball",
@@ -48,7 +89,7 @@ router.post('/', (req, res) => {
 });
 
 // update product
-router.put('/:id', (req, res) => {
+router.put("/:id", (req, res) => {
   // update product data
   Product.update(req.body, {
     where: {
@@ -89,8 +130,24 @@ router.put('/:id', (req, res) => {
     });
 });
 
-router.delete('/:id', (req, res) => {
+router.delete("/:id", (req, res) => {
   // delete one product by its `id` value
+  Product.destroy({
+    where: {
+      id: req.params.id,
+    },
+  })
+    .then((numDeletedRows) => {
+      if (numDeletedRows > 0) {
+        res.status(204).end();
+      } else {
+        res.status(404).end();
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).json({ message: "Internal server error" });
+    });
 });
 
 module.exports = router;
